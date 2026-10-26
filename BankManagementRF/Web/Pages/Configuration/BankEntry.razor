@@ -1,0 +1,247 @@
+﻿@page "/Configuration/BankEntry"
+@using Domain.Configuration
+@using Domain.Configuration.Employment
+@using Domain.Configuration.Payroll
+@using RapidFireLib.Extensions
+
+<style>
+    .labelContainer {
+        text-align: left;
+        padding: 11px;
+    }
+
+    label {
+        font-weight: 400;
+        color: black;
+        font-size: 14px;
+    }
+</style>
+
+<PageRF Title="Add Bank info Entry">
+    <PageHeaderRF>
+        <Actions>
+            <FormAction ResetButton SaveButton SaveAsNew="false" SaveAndExit="false" />
+        </Actions>
+    </PageHeaderRF>
+
+    <ContainerRF>
+        <FormRF @ref="formRF" Model="Bank" Context="d" OnAfterSave="afterSave">
+            <RowRF class="d-flex align-items-center justify-content-center">
+
+                <ColRF SpanSM="4" Span="4" SpanL="4" SpanXL="4">
+                    <div class="w-50" style="margin-left:100px;">
+                        You can enter individual bank information here. If you make any mistakes, you can update it as needed.
+                    </div>
+                </ColRF>
+
+                <ColRF SpanSM="8" Span="8" SpanL="8" SpanXL="8">
+                    <RowRF>
+                        <ColRF SpanSM="12" Span="4" SpanL="4" SpanXL="4">
+                            <div class="form-label labelContainer">
+                                <label>Bank Name</label>
+                            </div>
+                            <InputRF @bind-Value="@d.BankName" Type="text" Placeholder="Enter Bank Name" />
+                        </ColRF>
+
+                        <ColRF SpanSM="12" Span="4" SpanL="4" SpanXL="4">
+                            <div class="form-label labelContainer">
+                                <label>Bank Code(optional)</label>
+                            </div>
+                            <InputRF @bind-Value="@d.BankCode" Type="text" Placeholder="Enter Bank Code" />
+                        </ColRF>
+
+                        <ColRF SpanSM="12" Span="4" SpanL="4" SpanXL="4">
+                            <div class="form-label labelContainer">
+                                <label>
+                                    Country
+                                </label>
+                            </div>
+
+                            <SelectRF @bind-Value="d.CountryId"
+                                      OptionList="new List<Country>()"
+                                      DisplayText="t => t.CountryName"
+                                      ValueText="t => t.CountryId"
+                                      OrderBy="t => t.CountryName" />
+                        </ColRF>
+
+                        <ColRF SpanSM="12" Span="4" SpanL="4" SpanXL="4">
+                            <div class="form-label labelContainer">
+                                <label>Status</label>
+                            </div>
+                            <RadioRF Class="d-flex" @bind-Value="@d.Status"
+                                     OptionList="StatusList"
+                                     DisplayText="c => c.DisplayText"
+                                     ValueText="c => c.ValueText" />
+                        </ColRF>
+
+                        <ColRF SpanSM="12" Span="12" SpanL="12" SpanXL="12">
+                            <div style="margin-top:25px;  ">
+                                <h6><i class="fa fa-edit"></i> Branch List :</h6>
+                            </div>
+                            <RowRF>
+
+                                <!-- Left Column: Form -->
+                                <ColRF SpanSM="12" Span="6" SpanL="6" SpanXL="6">
+                                    <FormRF @ref="formRF_Branch" @key="branchFormKey" @bind-Data="dataForBranch" Context="dd" OnBeforeSave="(x) => AddBranch(d, x)">
+                                        <RowRF Class="g-1">
+
+                                            <ColRF SpanSM="12" Span="4" SpanL="4" SpanXL="4" Class="align-items-center" Style="border-top:1px dotted #C5C5C5">
+                                                <label>Branch Name</label>
+                                                <InputRF @bind-Value="@dd.BranchName" Type="text" Placeholder="Enter Bank Name" />
+                                            </ColRF>
+
+                                            <ColRF SpanSM="12" Span="4" SpanL="4" SpanXL="4" Class="align-items-center" Style="border-top:1px dotted #C5C5C5">
+                                                <label>Address</label>
+                                                <InputRF @bind-Value="@dd.Address" Type="text" Placeholder="Enter Address" />
+                                            </ColRF>
+
+                                            <ColRF SpanSM="12" Span="4" SpanL="4" SpanXL="4" Class="align-items-center" Style="border-top:1px dotted #C5C5C5">
+                                                <label>City</label>
+                                                <SelectRF @bind-Value="dd.CityId"
+                                                          OptionList="new List<City>()"
+                                                          DisplayText="t => t.CityName"
+                                                          ValueText="t => t.CityId"
+                                                          OrderBy="t => t.CityName" />
+                                            </ColRF>
+
+                                            <ColRF SpanSM="12" Span="4" SpanL="4" SpanXL="4" Class=" align-items-center mt-4">
+                                                <FormAction SaveAndExit="false" SaveAsNew="false" ResetButtonText="Clear Data" SaveButtonText="Add" Class="ChildAction" />
+                                            </ColRF>
+
+                                        </RowRF>
+                                    </FormRF>
+                                </ColRF>
+
+                                <!-- Right Column: Table -->
+                                <ColRF SpanSM="12" Span="6" SpanL="6" SpanXL="6">
+                                    <ContainerRF Title="Branch List">
+                                        <TableRF @ref="details_table_ref" DataList="d.Branch" OnBeforeEdit="onBranchEdit" OnBeforeDelete="(m) => onBranchDelete(d, m)" Context="c" PageSize="5">
+                                            <HeaderRowTemplate>
+                                                <th>Branch Name</th>
+                                                <th>Address</th>
+                                                <th>City</th>
+                                            </HeaderRowTemplate>
+
+                                            <BodyRowTemplate>
+                                                <td>@c.BranchName</td>
+                                                <td>@c.Address</td>
+
+                                                <td>@GetCityName(c.CityId)</td>
+                                            </BodyRowTemplate>
+                                        </TableRF>
+                                    </ContainerRF>
+                                </ColRF>
+
+
+                            </RowRF>
+
+                        </ColRF>
+
+                    </RowRF>
+                </ColRF>
+            </RowRF>
+        </FormRF>
+    </ContainerRF>
+</PageRF>
+
+@code {
+
+    FormRF<Bank>? formRF { get; set; }
+    FormRF<Branch>? formRF_Branch { get; set; }
+    TableRF<Branch> details_table_ref { get; set; }
+    Db? db { get; set; }
+    Bank dataForBank { get; set; } = new() { Status = 1 };
+    Branch dataForBranch { get; set; } = new();
+    bool resetBranchFormAfterAdd = false;
+    Guid branchFormKey = Guid.NewGuid();
+    public List<SpinnerValue> StatusList = new List<SpinnerValue>
+    {
+        new SpinnerValue{DisplayText="Active", ValueText="1"},
+        new SpinnerValue{DisplayText="Inactive", ValueText="0"},
+    };
+
+    protected override void OnInitialized()
+    {
+        db = new Db(config);
+
+    }
+
+    void afterSave(Bank model)
+    {
+        formRF?.Reset();
+        nav.NavigateTo("/Configuration/BankView");
+    }
+
+    bool onBranchEdit(Branch m)
+    {
+
+        dataForBranch.CopyClass(m);
+        StateHasChanged();
+        return false;
+    }
+    bool onBranchDelete(Bank master, Branch m)
+    {
+        var branchToRemove = master.Branch.FirstOrDefault(x => x.BranchId == m.BranchId);
+        if (branchToRemove != null)
+        {
+            master.Branch.Remove(branchToRemove);
+            details_table_ref.Refresh();
+            StateHasChanged();
+        }
+        return false;
+    }
+
+    bool onEdit(Bank model)
+    {
+        dataForBank.BankId = model.BankId;
+        dataForBank.BankCode = model.BankCode;
+        dataForBank.BankName = model.BankName;
+        dataForBank.CountryId = model.CountryId;
+        dataForBank.Status = model.Status;
+
+        StateHasChanged();
+        return false;
+    }
+    Branch AddBranch(Bank master, Branch child)
+    {
+        if (child.BranchId == 0)
+        {
+            child.BranchId = master.Branch.Count == 0
+                             ? 1
+                             : master.Branch.Max(x => x.BranchId) + 1;
+        }
+        var existingBranch = master.Branch.FirstOrDefault(x => x.BranchId == child.BranchId);
+        if (existingBranch != null)
+        {
+            master.Branch.Remove(existingBranch);
+        }
+        master.Branch.Add(child);
+        details_table_ref.Refresh();
+        StateHasChanged();
+        resetBranchFormAfterAdd = true;
+        return null;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (resetBranchFormAfterAdd)
+        {
+            resetBranchFormAfterAdd = false;
+
+            dataForBranch = new Branch();
+            branchFormKey = Guid.NewGuid();
+
+            StateHasChanged();
+        }
+    }
+
+    string GetCityName(int cityId)
+    {
+        if (cityId != 0)
+        {
+            string cityName = db?.Get<City>(c => c.CityId == cityId)?.FirstOrDefault()?.CityName!;
+            return cityName;
+        }
+        return "N/A";
+    }
+}

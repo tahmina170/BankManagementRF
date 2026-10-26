@@ -1,0 +1,53 @@
+﻿@typeparam ParentModel where ParentModel : class, new()
+@typeparam ChildModel where ChildModel : class, new()
+
+@if (ParentComponentIsValid())
+{
+	if (DetailsEntryBody != null)
+	{
+		<div class="details-entry-body-rf">
+			@DetailsEntryBody
+		</div>
+	}
+	if (DetailsListBody != null)
+	{
+		<div class="details-list-body-rf">
+			@DetailsListBody
+		</div>
+	}
+}
+else
+{
+	<p>Error: DetailsPanelRF must be used within a MasterDetailsPanelRF.</p>
+}
+
+@code {
+	[Parameter]
+	public RenderFragment DetailsEntryBody { get; set; }
+	[Parameter]
+	public RenderFragment DetailsListBody { get; set; }
+
+	[CascadingParameter]
+	private MasterDetailsPanelRF<ParentModel> ParentComponent { get; set; }
+
+	[Parameter]
+	public List<object>? DetailDataList { get; set; }
+
+	private bool ParentComponentIsValid()
+	{
+		return ParentComponent != null;
+	}
+	public void AddToDetailsList(ChildModel child)
+	{
+		// Assuming the data you want to pass is attendanceDetails
+		if (child != null)
+		{
+			DetailDataList.Add(child);
+			ParentComponent?.UpdateDetailData(DetailDataList, typeof(ChildModel));
+		}
+	}
+	protected override void OnAfterRender(bool firstRender)
+	{
+		ParentComponent?.UpdateDetailData(DetailDataList, typeof(ChildModel));
+	}
+}

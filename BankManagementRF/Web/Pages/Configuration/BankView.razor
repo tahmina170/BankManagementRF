@@ -1,0 +1,155 @@
+﻿@page "/Configuration/BankView"
+@using Domain.Configuration
+@using Domain.Configuration.Payroll
+@using RapidFireLib.Extensions
+<style>
+	.card, .card.False {
+	border-left: 4px solid #d7d7d7 !important;
+	border-radius: 6px;
+	cursor: pointer;
+	}
+	.
+	.card:hover, .card.True {
+	border-left: 4px solid #1a9f92 !important;
+	border-radius: 6px;
+	}
+
+	.dheadTitle {
+	white-space: nowrap;
+	font-size: 1.2rem;
+	font-weight: bold;
+	color: #00796b;
+	padding: 15px;
+	background: #f1f1f1; 
+	display: flex;
+	width: 100%;
+	border-radius: 4px;
+	margin-bottom: 15px;
+	}
+</style>
+
+<PageRF Title="Bank Information" BackButton="true" AddButtonText="Add New" AddUrl="/Configuration/BankEntry">
+	<PageHeaderRF>
+		<Actions>
+			@* <FormAction ResetButton SaveButton SaveAsNew="false" SaveAndExit="false" /> *@
+			@* <FilterRF @bind-Model=@filter WithQuickFilter="true" QuickFilterPlaceholder="Search by Training Name" FilterOnChange="true">
+				<DatePickerRF @bind-Value="filter.FromDate" Label="From Date" Format="yyyy-MM-dd" class="filter-input" />
+				<DatePickerRF @bind-Value="filter.ToDate" Label="To Date" Format="yyyy-MM-dd" class="filter-input" />
+			</FilterRF> *@
+		</Actions>
+	</PageHeaderRF>
+</PageRF>
+
+
+<MasterDetailsViewRF DetailsViewTitle="@($"Bank Details of {BankName}")" >
+	<MasterViewTemplate>
+		<GridRF Model="BankList" Context="a" MinHeight="0" Width="100"
+		DefaultSelectedIndex="0"
+				SQL="@string.Format($"EXEC GetBankList '[PageSize]','[PageNo]'")"
+				OnCardClick="GetMasterData" Edit="true" EditModel="typeof(Bank)" EditUrl="/Configuration/BankEntry" Delete="true">
+			<CardTemplate>
+				<div class="card @(a.BankId==BankId)">
+					<div class="card-header">
+						<h6>@a.BankName</h6>
+					</div>
+					<div class="card-body">
+						<RowRF>
+							<ColRF>Bank Name:@a.BankName</ColRF>
+							<ColRF>Country:@a.CountryName</ColRF>
+							<ColRF>Status:@a.Status</ColRF>
+						</RowRF>
+
+					</div>
+				</div>
+			</CardTemplate>
+		</GridRF>
+	</MasterViewTemplate>
+	<DetailsViewPanel>
+		<DetailsViewRF>
+			<DetailsViewTemplate>
+				<TableRF Model="BranchList" EditModel="typeof(Branch)" Context="c" Edit="false" Delete="true" SQL="@($"EXEC GetBranchList '{BankId}','[PageSize]','[PageNo]'")">
+					<HeaderRowTemplate>
+						<th>Branch Name</th>
+						<th>Address</th>
+						<th>City</th>
+					</HeaderRowTemplate>
+					<BodyRowTemplate>
+						<td>@c.BranchName</td>
+						<td>@c.Address</td>
+						<td>@c.CityName</td>
+					</BodyRowTemplate>
+
+				</TableRF>
+
+
+	@* 			@if(branchData != null)
+				{
+					<TableRF DataList="branchData" Context="c" Edit="true" Delete="true">
+						<HeaderRowTemplate>
+							<th>Branch Name</th>
+							<th>Address</th>
+							<th>City</th>
+						</HeaderRowTemplate>
+						<BodyRowTemplate>
+							<td>@c.BranchName</td>
+							<td>@c.Address</td>
+							<td>@c.CityId</td>
+						</BodyRowTemplate>
+
+					</TableRF>
+				}
+				 *@
+				
+
+				@* <h1>Hello World</h1> *@
+			</DetailsViewTemplate>
+		</DetailsViewRF>
+	</DetailsViewPanel>
+</MasterDetailsViewRF>
+
+
+@code {
+	bool activeClass = false;
+	Db? db { get; set; }
+	FilterModel filter = new();
+	int BankId;
+	string BankName;
+	// List<BranchList> branchData;
+	
+	protected override void OnInitialized()
+	{
+		db = new Db(config);
+		var detailList = db.Get<BankList>($"EXEC GetBankList '15', '1'").FirstOrDefault();
+		if (detailList != null)
+		{
+			BankId = detailList.BankId;
+			BankName = detailList.BankName;
+			activeClass = true;
+		}
+		else
+		{
+			BankId = 0;         // বা কোনো default value
+			BankName = "";      // বা "No Bank Available"
+			activeClass = false;
+		}
+		// branchData = db.Get<BranchList>($"EXEC GetBranchList '{BankId}','15','1'").ToList();
+		
+	}
+	protected override void OnAfterRender(bool firstRender)
+	{
+		// branchData = db.Get<BranchList>($"EXEC GetBranchList '{BankId}','15','1'").ToList();
+		StateHasChanged();
+		base.OnAfterRender(firstRender);
+	}
+
+	public void GetMasterData(BankList model)
+	{
+		bool activeClass = false;
+		BankId = model.BankId;
+		BankName = model.BankName;
+
+	}
+	
+
+
+}

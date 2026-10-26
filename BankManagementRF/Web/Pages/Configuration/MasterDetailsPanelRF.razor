@@ -1,0 +1,131 @@
+﻿@typeparam ParentModel where ParentModel : class, new()
+
+<PageRF Title="@Title" BackButton="@IsBackButton">
+	<PageHeaderRF>
+		<Actions>
+			@if (!IsCustomButtonEnable)
+			{
+				<FormAction SaveAsNew="false" SaveAndExit="false" SaveButtonText="Save" ResetButton="@DefaultResetButtonHide" />
+			}
+		</Actions>
+	</PageHeaderRF>
+
+	<RowRF Class="d-flex align-items-stretch m-1 h-100">
+		<ColRF SpanSM="12" Span="12" SpanL="12" SpanXL="12">
+			<FormRF @ref="formRF" Model="ParentModel" Context="master" OnAfterSave="afterSave">
+				@if (MasterEntryBody != null)
+				{
+					
+						@MasterEntryBody(master)
+				
+				}
+				@if (DetailsPanelBodies != null)
+				{
+					
+						<CascadingValue Value="this">
+							@DetailsPanelBodies
+						</CascadingValue>
+				
+				}
+				@if (IsCustomButtonEnable)
+				{
+					
+						@if (CustomButtonTemplate != null)
+						{
+							@CustomButtonTemplate
+						}
+					
+				}
+			</FormRF>
+		</ColRF>
+	</RowRF>
+
+</PageRF>
+@code
+{
+	FormRF<ParentModel> formRF { get; set; }
+
+	[Parameter]
+	public string? Title { get; set; }
+
+	[Parameter]
+	public bool DefaultResetButtonHide { get; set; } = false;
+	[Parameter]
+	public bool IsCustomButtonEnable { get; set; } = false;
+
+	[Parameter]
+	public RenderFragment CustomButtonTemplate { get; set; }
+
+	[Parameter]
+	public bool IsBackButton { get; set; } = true;
+	[Parameter]
+	public RenderFragment<ParentModel>? MasterEntryBody { get; set; }
+	[Parameter]
+	public RenderFragment DetailsPanelBodies { get; set; }
+
+	private void afterSave(ParentModel model)
+	{
+		_ = Task.Run(async () =>
+					{
+						await Task.Delay(2000);
+						RF.UI.Events.Back();
+					});
+	}
+	public void Submit()
+	{
+		formRF.Submit();
+	}
+	public void UpdateDetailData(List<object> newDetailData, Type childModelType)
+	{
+		SetData(newDetailData, childModelType);
+	}
+	private void SetData(List<object> DetailDataList, Type childModelType)
+	{
+		if (DetailDataList != null && formRF.Data is ParentModel masterModel)
+		{
+			var detailProperty = typeof(ParentModel).GetProperties()
+				.FirstOrDefault(p => p.PropertyType.IsGenericType &&
+										p.PropertyType.GetGenericTypeDefinition() == typeof(List<>) &&
+										p.PropertyType.GetGenericArguments()[0] == childModelType);
+
+			if (detailProperty?.CanWrite == true)
+			{
+				if (childModelType != null)
+				{
+					var convertedList = DetailDataList
+						.Select(view =>
+						{
+							var detailModel = Activator.CreateInstance(childModelType);
+							if (detailModel != null)
+							{
+								foreach (var viewProp in view.GetType().GetProperties())
+								{
+									var modelProp = childModelType.GetProperty(viewProp.Name);
+									if (modelProp != null && modelProp.CanWrite && modelProp.PropertyType == viewProp.PropertyType)
+									{
+										modelProp.SetValue(detailModel, viewProp.GetValue(view));
+									}
+								}
+							}
+							return detailModel;
+						})
+						.ToList();
+
+					var genericListType = typeof(List<>).MakeGenericType(childModelType);
+					var typedList = Activator.CreateInstance(genericListType);
+					var addMethod = genericListType.GetMethod("Add");
+
+					foreach (var item in convertedList)
+					{
+						addMethod?.Invoke(typedList, new[] { item });
+					}
+
+					detailProperty.SetValue(masterModel, typedList);
+				}
+			}
+		}
+	}
+
+
+}
+

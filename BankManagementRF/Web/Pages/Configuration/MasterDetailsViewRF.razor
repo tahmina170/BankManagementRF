@@ -1,0 +1,53 @@
+﻿<style>
+	.master-rf, .details-rf {
+		height: 80vh;
+		max-height: 80vh;
+		overflow-y: auto !important; /* Make sure content can scroll */
+		overflow-x: hidden; /* Prevent horizontal scroll */
+	}
+
+	.container-rf-header {
+		top: -15px;
+	}
+	.grid-rf {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		overflow: hidden; /* Prevent parent container from scrolling */
+	}
+</style>
+
+<RowRF Class="d-flex align-items-stretch m-1 h-100">
+		<!-- Master Grid -->
+		<ColRF Span="4" SpanL="4" SpanXL="4" SpanSM="12">
+			<ContainerRF Class="master-rf">
+				@if (MasterViewTemplate != null)
+				{
+					@MasterViewTemplate
+				}
+			</ContainerRF>
+		</ColRF>
+
+		<!-- Detail Grid  -->
+		<ColRF Span="8" SpanL="8" SpanXL="8" SpanSM="12">
+		<ContainerRF Class="details-rf" Title="@DetailsViewTitle">
+				@if (DetailsViewPanel != null)
+				{
+					<CascadingValue Value="this">
+						@DetailsViewPanel
+					</CascadingValue>
+				}
+			</ContainerRF>
+		</ColRF>
+	</RowRF>
+
+
+@code
+{
+	[Parameter]
+	public RenderFragment MasterViewTemplate { get; set; }
+	[Parameter]
+	public RenderFragment DetailsViewPanel { get; set; }
+	[Parameter]
+	public string DetailsViewTitle { get; set; }
+}

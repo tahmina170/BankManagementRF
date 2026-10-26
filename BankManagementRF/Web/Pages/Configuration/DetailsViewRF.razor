@@ -1,0 +1,32 @@
+﻿
+@if (ParentComponentIsValid())
+{
+	@* if (DetailsViewTitle != null)
+	{
+		@DetailsViewTitle
+	} *@
+	if (DetailsViewTemplate != null)
+	{
+			@DetailsViewTemplate
+	}
+}
+else
+{
+	<p>Error: DetailsPanelRF must be used within a MasterDetailsPanelRF.</p>
+}
+
+@code {
+	[Parameter]
+	public RenderFragment DetailsViewTemplate { get; set; }
+	// [Parameter]
+	// public RenderFragment DetailsViewTitle { get; set; }
+
+	[CascadingParameter]
+	private MasterDetailsViewRF ParentComponent { get; set; }
+
+
+	private bool ParentComponentIsValid()
+	{
+		return ParentComponent != null;
+	}
+}
